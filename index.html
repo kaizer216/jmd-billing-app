@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>JMD Billing</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="JMD Billing">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+  html, body { margin: 0; height: 100%; background: #f4f5f7; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
+  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #f4f5f7; }
+  #setup { display: none; max-width: 420px; margin: 0 auto; padding: 48px 20px; }
+  #setup h1 { font-size: 22px; margin: 0 0 8px; color: #1a1d23; }
+  #setup p { color: #6b7280; font-size: 14px; line-height: 1.5; }
+  #setup input { width: 100%; box-sizing: border-box; padding: 12px; font-size: 16px; border: 1px solid #e5e7eb; border-radius: 10px; margin: 12px 0; }
+  #setup button { width: 100%; padding: 14px; font-size: 16px; font-weight: 700; background: #2563eb; color: #fff; border: 0; border-radius: 12px; }
+  #err { color: #dc2626; font-size: 13px; min-height: 18px; }
+  #reset { position: fixed; right: 6px; bottom: 6px; z-index: 5; font-size: 11px; color: #9ca3af; background: none; border: 0; padding: 6px; opacity: .6; }
+</style>
+</head>
+<body>
+<div id="setup">
+  <h1>JMD Billing</h1>
+  <p>Paste your JMD Billing app link once. It's saved only on this device, so anyone opening this page without the link sees nothing.</p>
+  <input id="url" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+  <div id="err"></div>
+  <button id="save">Save &amp; open</button>
+</div>
+<button id="reset" style="display:none" title="Change the saved app link">change link</button>
+<script>
+(function () {
+  var KEY = 'jmdBillingUrl';
+  var setup = document.getElementById('setup'), resetBtn = document.getElementById('reset');
+  function get() { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } }
+  function launch(url) {
+    setup.style.display = 'none';
+    var f = document.createElement('iframe');
+    f.src = url;
+    f.allow = 'clipboard-write; clipboard-read; fullscreen';
+    document.body.appendChild(f);
+    resetBtn.style.display = '';
+  }
+  function showSetup() { setup.style.display = 'block'; document.getElementById('url').focus(); }
+  resetBtn.onclick = function () {
+    if (!confirm('Remove the saved app link from this device?')) return;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    location.reload();
+  };
+  document.getElementById('save').onclick = function () {
+    var v = document.getElementById('url').value.trim();
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec/.test(v)) {
+      document.getElementById('err').textContent = 'That doesn’t look like a JMD Billing app link (…/macros/s/…/exec).';
+      return;
+    }
+    try { localStorage.setItem(KEY, v); } catch (e) {}
+    location.reload();
+  };
+  var saved = get();
+  if (saved) launch(saved); else showSetup();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+})();
+</script>
+</body>
+</html>
